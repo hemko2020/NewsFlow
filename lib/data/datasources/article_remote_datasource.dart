@@ -4,7 +4,11 @@ import '../models/article_model.dart';
 import '../../domain/entities/category.dart';
 
 abstract class ArticleRemoteDataSource {
-  Future<List<ArticleModel>> getArticlesByCategory(Category category, {int page = 1});
+  Future<List<ArticleModel>> getArticlesByCategory(
+    Category category, {
+    int page = 1,
+    String? query,
+  });
 }
 
 class ArticleRemoteDataSourceImpl implements ArticleRemoteDataSource {
@@ -14,9 +18,14 @@ class ArticleRemoteDataSourceImpl implements ArticleRemoteDataSource {
   ArticleRemoteDataSourceImpl(this.client);
 
   @override
-  Future<List<ArticleModel>> getArticlesByCategory(Category category, {int page = 1}) async {
-    final queryParam = _mapCategoryToQuery(category);
-    final url = 'https://newsapi.org/v2/everything?q=$queryParam&from=2025-10-05&sortBy=publishedAt&apiKey=$apiKey&page=$page';
+  Future<List<ArticleModel>> getArticlesByCategory(
+    Category category, {
+    int page = 1,
+    String? query,
+  }) async {
+    final searchQuery = query ?? _mapCategoryToQuery(category);
+    final url =
+        'https://newsapi.org/v2/everything?q=$searchQuery&from=2025-10-05&sortBy=publishedAt&apiKey=$apiKey&page=$page';
     final response = await client.get(Uri.parse(url));
 
     if (response.statusCode == 200) {

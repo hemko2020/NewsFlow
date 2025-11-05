@@ -12,10 +12,18 @@ class ArticleRepositoryImpl implements ArticleRepository {
   ArticleRepositoryImpl(this.remoteDataSource, this.localDataSource);
 
   @override
-  Future<List<Article>> getArticles({Category? category, int page = 1}) async {
+  Future<List<Article>> getArticles({
+    Category? category,
+    int page = 1,
+    String? query,
+  }) async {
     try {
       // Try remote first
-      final remoteArticles = await remoteDataSource.getArticlesByCategory(category!, page: page);
+      final remoteArticles = await remoteDataSource.getArticlesByCategory(
+        category!,
+        page: page,
+        query: query,
+      );
       // Save to local
       await localDataSource.saveArticles(remoteArticles);
       return remoteArticles.map((model) => model as Article).toList();

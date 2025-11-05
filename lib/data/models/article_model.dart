@@ -23,7 +23,9 @@ class ArticleModel extends Article {
       url: json['url'] ?? '',
       source: json['source'] ?? '',
       imageUrl: json['imageUrl'],
-      publishedAt: DateTime.parse(json['publishedAt'] ?? DateTime.now().toIso8601String()),
+      publishedAt: DateTime.parse(
+        json['publishedAt'] ?? DateTime.now().toIso8601String(),
+      ),
       category: Category.values.firstWhere(
         (cat) => cat.name == json['category'],
         orElse: () => Category.politics,
@@ -72,7 +74,9 @@ class ArticleModel extends Article {
       url: json['url'] ?? '',
       source: json['source']?['name'] ?? '',
       imageUrl: json['urlToImage'],
-      publishedAt: DateTime.parse(json['publishedAt'] ?? DateTime.now().toIso8601String()),
+      publishedAt: DateTime.parse(
+        json['publishedAt'] ?? DateTime.now().toIso8601String(),
+      ),
       category: Category.politics, // default, will be set by category
     );
   }

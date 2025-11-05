@@ -13,9 +13,7 @@ class HomePage extends ConsumerWidget {
     final selectedCategory = ref.watch(selectedCategoryProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('NewsFlow'),
-      ),
+      appBar: AppBar(title: const Text('NewsFlow')),
       body: Column(
         children: [
           // Category chips
@@ -33,9 +31,14 @@ class HomePage extends ConsumerWidget {
                     label: Text(category.displayName),
                     selected: isSelected,
                     onSelected: (selected) {
-                      final category = selected ? categories[index] : Category.technology;
-                      ref.read(selectedCategoryProvider.notifier).state = category;
-                      ref.read(articleNotifierProvider.notifier).selectCategory(category);
+                      final category = selected
+                          ? categories[index]
+                          : Category.technology;
+                      ref.read(selectedCategoryProvider.notifier).state =
+                          category;
+                      ref
+                          .read(articleNotifierProvider.notifier)
+                          .selectCategory(category);
                     },
                   ),
                 );
@@ -59,11 +62,14 @@ class HomePage extends ConsumerWidget {
                                   width: 50,
                                   height: 50,
                                   fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) => const Icon(Icons.image_not_supported),
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      const Icon(Icons.image_not_supported),
                                 )
                               : const Icon(Icons.article),
                           title: Text(article.title),
-                          subtitle: Text('${article.source} • ${article.summary ?? article.description}'),
+                          subtitle: Text(
+                            '${article.source} • ${article.summary ?? article.description}',
+                          ),
                           trailing: IconButton(
                             icon: const Icon(Icons.favorite_border),
                             onPressed: () {
