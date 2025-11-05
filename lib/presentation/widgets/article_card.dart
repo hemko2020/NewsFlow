@@ -61,7 +61,7 @@ class ArticleCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '${article.source} • ${article.summary ?? article.description}',
+                      '${article.source} • ${article.summary ?? article.description ?? 'No description available'}',
                       style: Theme.of(
                         context,
                       ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
