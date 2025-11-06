@@ -62,9 +62,9 @@ class ArticleCard extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       '${article.source} • ${article.summary ?? article.description}',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.grey[600],
+                      ),
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                     ),
