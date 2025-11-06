@@ -12,7 +12,10 @@ class ArticleLocalDataSourceImpl implements ArticleLocalDataSource {
   final Set<String> _favorites = {};
 
   @override
-  Future<List<ArticleModel>> getArticles({String? category, int limit = 50}) async {
+  Future<List<ArticleModel>> getArticles({
+    String? category,
+    int limit = 50,
+  }) async {
     var articles = _articles;
     if (category != null) {
       articles = articles.where((a) => a.category.name == category).toList();

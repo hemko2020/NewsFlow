@@ -7,6 +7,9 @@ class GetArticles {
 
   GetArticles(this.repository);
 
-  Future<List<Article>> call({Category? category, int page = 1}) =>
-      repository.getArticles(category: category, page: page);
+  Future<List<Article>> call({
+    Category? category,
+    int page = 1,
+    String? query,
+  }) => repository.getArticles(category: category, page: page, query: query);
 }
