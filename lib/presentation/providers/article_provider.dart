@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
+import 'package:logging/logging.dart';
 import '../../data/datasources/article_local_datasource.dart';
 import '../../data/datasources/article_remote_datasource.dart';
 import '../../data/repositories/article_repository_impl.dart';
@@ -38,9 +39,11 @@ class ArticleNotifier extends StateNotifier<List<Article>> {
   int currentPage = 1;
   bool isLoading = false;
 
+  final Logger _logger = Logger('ArticleNotifier');
+
   ArticleNotifier(this.getArticles, {Category? initialCategory})
-    : selectedCategory = initialCategory ?? Category.technology,
-      super([]) {
+      : selectedCategory = initialCategory ?? Category.technology,
+        super([]) {
     loadArticles();
   }
 
@@ -61,7 +64,7 @@ class ArticleNotifier extends StateNotifier<List<Article>> {
       if (loadMore) currentPage = page;
     } catch (e) {
       // Handle error
-      print('Error loading articles: $e');
+      _logger.severe('Error loading articles: $e');
     } finally {
       isLoading = false;
     }
@@ -94,6 +97,8 @@ final searchQueryProvider = StateProvider<String>((ref) => '');
 class SearchNotifier extends StateNotifier<List<Article>> {
   final GetArticles getArticles;
 
+  final Logger _logger = Logger('SearchNotifier');
+
   SearchNotifier(this.getArticles) : super([]);
 
   Future<void> searchArticles(String query) async {
@@ -111,7 +116,7 @@ class SearchNotifier extends StateNotifier<List<Article>> {
       );
       state = articles;
     } catch (e) {
-      print('Error searching articles: $e');
+      _logger.severe('Error searching articles: $e');
       state = [];
     }
   }

@@ -13,7 +13,6 @@ class AppColors {
 
   static const Color onPrimary = Colors.white;
   static const Color onSecondary = Colors.black;
-  static const Color onBackground = Colors.black;
   static const Color onSurface = Colors.black;
   static const Color onError = Colors.white;
 
@@ -25,43 +24,43 @@ class AppColors {
 
 // Polices et styles de texte
 class AppTextStyles {
-  static const TextStyle headline1 = TextStyle(
+  static TextStyle headline1 = const TextStyle(
     fontSize: 32,
     fontWeight: FontWeight.bold,
-    color: AppColors.onBackground,
+    color: AppColors.onSurface,
   );
 
-  static const TextStyle headline2 = TextStyle(
+  static TextStyle headline2 = const TextStyle(
     fontSize: 24,
     fontWeight: FontWeight.bold,
-    color: AppColors.onBackground,
+    color: AppColors.onSurface,
   );
 
-  static const TextStyle headline3 = TextStyle(
+  static TextStyle headline3 = const TextStyle(
     fontSize: 20,
     fontWeight: FontWeight.w600,
-    color: AppColors.onBackground,
+    color: AppColors.onSurface,
   );
 
-  static const TextStyle bodyText1 = TextStyle(
+  static TextStyle bodyText1 = const TextStyle(
     fontSize: 16,
     fontWeight: FontWeight.normal,
-    color: AppColors.onBackground,
+    color: AppColors.onSurface,
   );
 
-  static const TextStyle bodyText2 = TextStyle(
+  static TextStyle bodyText2 = const TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.normal,
-    color: AppColors.onBackground,
+    color: AppColors.onSurface,
   );
 
-  static const TextStyle caption = TextStyle(
+  static TextStyle caption = const TextStyle(
     fontSize: 12,
     fontWeight: FontWeight.normal,
     color: AppColors.textSecondary,
   );
 
-  static const TextStyle button = TextStyle(
+  static TextStyle button = const TextStyle(
     fontSize: 16,
     fontWeight: FontWeight.w600,
     color: AppColors.onPrimary,
@@ -78,12 +77,10 @@ class AppTheme {
       secondary: AppColors.secondary,
       secondaryContainer: AppColors.secondaryVariant,
       surface: AppColors.surface,
-      background: AppColors.background,
       error: AppColors.error,
       onPrimary: AppColors.onPrimary,
       onSecondary: AppColors.onSecondary,
       onSurface: AppColors.onSurface,
-      onBackground: AppColors.onBackground,
       onError: AppColors.onError,
     ),
     scaffoldBackgroundColor: AppColors.background,
@@ -97,7 +94,7 @@ class AppTheme {
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
-    textTheme: const TextTheme(
+    textTheme: TextTheme(
       headlineLarge: AppTextStyles.headline1,
       headlineMedium: AppTextStyles.headline2,
       headlineSmall: AppTextStyles.headline3,
