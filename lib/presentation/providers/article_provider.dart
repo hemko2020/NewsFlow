@@ -4,38 +4,24 @@ import 'package:dio/dio.dart';
 import 'package:logging/logging.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:newsflow/data/datasources/article_local_datasource.dart';
+import 'package:newsflow/data/datasources/article_remote_datasource.dart';
+import 'package:newsflow/domain/repositories/article_repository.dart';
+import 'package:newsflow/domain/usecases/get_articles.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../data/datasources/article_local_datasource.dart';
-import '../../data/datasources/article_remote_datasource.dart';
-import '../../data/repositories/article_repository_impl.dart';
+import '../../core/service_locator.dart';
 import '../../domain/entities/article.dart';
 import '../../domain/entities/category.dart';
-import '../../domain/repositories/article_repository.dart';
-import '../../domain/usecases/get_articles.dart';
 
-final dioProvider = Provider<Dio>((ref) => Dio());
+final dioProvider = Provider<Dio>((ref) => getIt<Dio>());
 
-final articleLocalDataSourceProvider = Provider<ArticleLocalDataSource>((ref) {
-  return ArticleLocalDataSourceImpl();
-});
+final articleLocalDataSourceProvider = Provider<ArticleLocalDataSource>((ref) => getIt<ArticleLocalDataSource>());
 
-final articleRemoteDataSourceProvider = Provider<ArticleRemoteDataSource>((
-  ref,
-) {
-  final dio = ref.watch(dioProvider);
-  return ArticleRemoteDataSourceImpl(dio);
-});
+final articleRemoteDataSourceProvider = Provider<ArticleRemoteDataSource>((ref) => getIt<ArticleRemoteDataSource>());
 
-final articleRepositoryProvider = Provider<ArticleRepository>((ref) {
-  final remoteDataSource = ref.watch(articleRemoteDataSourceProvider);
-  final localDataSource = ref.watch(articleLocalDataSourceProvider);
-  return ArticleRepositoryImpl(remoteDataSource, localDataSource);
-});
+final articleRepositoryProvider = Provider<ArticleRepository>((ref) => getIt<ArticleRepository>());
 
-final getArticlesProvider = Provider<GetArticles>((ref) {
-  final repository = ref.watch(articleRepositoryProvider);
-  return GetArticles(repository);
-});
+final getArticlesProvider = Provider<GetArticles>((ref) => getIt<GetArticles>());
 
 // Provider for device language
 final deviceLanguageProvider = Provider<String>((ref) {
@@ -52,7 +38,7 @@ final deviceLanguageProvider = Provider<String>((ref) {
   return 'en';
 });
 
-// Provider for geolocation
+// Provider for geolocation (rétabli - fonctionnait bien avant)
 final geolocationProvider = FutureProvider<String?>((ref) async {
   try {
     LocationPermission permission = await Geolocator.checkPermission();
@@ -146,32 +132,23 @@ class LanguageNotifier extends StateNotifier<String?> {
   }
 }
 
-class ArticleNotifier extends StateNotifier<List<Article>> {
+class ArticleNotifier extends StateNotifier<AsyncValue<List<Article>>> {
   final GetArticles getArticles;
-  final Ref ref;
   Category selectedCategory;
   int currentPage = 1;
-  bool isLoading = false;
 
   final Logger _logger = Logger('ArticleNotifier');
 
-  ArticleNotifier(this.getArticles, this.ref, {Category? initialCategory})
+  ArticleNotifier(this.getArticles, {Category? initialCategory})
       : selectedCategory = initialCategory ?? Category.technology,
-        super([]) {
-    loadArticles();
+        super(AsyncValue.loading()) {
+    // Don't call loadArticles in constructor - will be called by provider
   }
 
-  Future<void> loadArticles({Category? category, bool loadMore = false}) async {
-    if (isLoading) return;
-    isLoading = true;
-
+  Future<void> loadArticles({Category? category, bool loadMore = false, String? selectedCountry, String? selectedLanguage, String? deviceLanguage, AsyncValue<String?>? geolocationAsync}) async {
     final cat = category ?? selectedCategory;
     final page = loadMore ? currentPage + 1 : 1;
-    final selectedCountry = ref.read(selectedCountryProvider);
-    final selectedLanguage = ref.read(selectedLanguageProvider);
-    final deviceLanguage = ref.read(deviceLanguageProvider);
-    final geolocationAsync = ref.read(geolocationProvider);
-    final country = selectedCountry ?? geolocationAsync.maybeWhen(
+    final country = selectedCountry ?? geolocationAsync?.maybeWhen(
       data: (data) => data,
       orElse: () => null,
     );
@@ -183,28 +160,21 @@ class ArticleNotifier extends StateNotifier<List<Article>> {
     try {
       final articles = await getArticles(category: cat, page: page, country: param['country'], language: param['language']);
       if (page == 1) {
-        state = articles;
+        state = AsyncValue.data(articles);
       } else {
-        state = [...state, ...articles];
+        state = AsyncValue.data([...state.value!, ...articles]);
       }
       if (loadMore) currentPage = page;
     } catch (e) {
-      // Handle error
       _logger.severe('Error loading articles: $e');
-    } finally {
-      isLoading = false;
+      state = AsyncValue.error(e, StackTrace.current);
     }
   }
 
-  void selectCategory(Category category) {
-    selectedCategory = category;
-    currentPage = 1;
-    loadArticles(category: category);
+  void loadMore({String? selectedCountry, String? selectedLanguage, String? deviceLanguage, AsyncValue<String?>? geolocationAsync}) {
+    loadArticles(loadMore: true, selectedCountry: selectedCountry, selectedLanguage: selectedLanguage, deviceLanguage: deviceLanguage, geolocationAsync: geolocationAsync);
   }
 
-  void loadMore() {
-    loadArticles(loadMore: true);
-  }
 }
 
 final selectedCategoryProvider = StateProvider<Category>(
@@ -212,10 +182,35 @@ final selectedCategoryProvider = StateProvider<Category>(
 );
 
 final articleNotifierProvider =
-    StateNotifierProvider<ArticleNotifier, List<Article>>((ref) {
+    StateNotifierProvider<ArticleNotifier, AsyncValue<List<Article>>>((ref) {
       final getArticles = ref.watch(getArticlesProvider);
       final selectedCategory = ref.watch(selectedCategoryProvider);
-      return ArticleNotifier(getArticles, ref, initialCategory: selectedCategory);
+      final notifier = ArticleNotifier(getArticles, initialCategory: selectedCategory);
+      final selectedCountry = ref.read(selectedCountryProvider);
+      final selectedLanguage = ref.read(selectedLanguageProvider);
+      final deviceLanguage = ref.read(deviceLanguageProvider);
+      final geolocationAsync = ref.read(geolocationProvider);
+      notifier.loadArticles(
+        category: selectedCategory,
+        selectedCountry: selectedCountry,
+        selectedLanguage: selectedLanguage,
+        deviceLanguage: deviceLanguage,
+        geolocationAsync: geolocationAsync,
+      );
+      ref.listen(selectedCategoryProvider, (previous, next) {
+        final selectedCountry = ref.read(selectedCountryProvider);
+        final selectedLanguage = ref.read(selectedLanguageProvider);
+        final deviceLanguage = ref.read(deviceLanguageProvider);
+        final geolocationAsync = ref.read(geolocationProvider);
+        notifier.loadArticles(
+          category: next,
+          selectedCountry: selectedCountry,
+          selectedLanguage: selectedLanguage,
+          deviceLanguage: deviceLanguage,
+          geolocationAsync: geolocationAsync,
+        );
+      });
+      return notifier;
     });
 
 final searchQueryProvider = StateProvider<String>((ref) => '');
