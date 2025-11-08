@@ -24,7 +24,7 @@ class ArticleRemoteDataSourceImpl implements ArticleRemoteDataSource {
       apiKey = dotenv.get('NEWS_API_KEY');
       if (apiKey.isEmpty) throw Exception('API key is empty');
     } catch (e) {
-      print('⚠️ News API key not found: $e. Please set NEWS_API_KEY in .env');
+      // News API key not found, articles will not load
       apiKey = '';
     }
   }

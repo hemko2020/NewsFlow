@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../lib/core/secure_storage_service.dart';
+import 'package:newsflow/core/secure_storage_service.dart';
 
 void main() {
   group('Security Services Integration Tests', () {

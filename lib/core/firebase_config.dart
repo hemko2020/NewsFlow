@@ -3,19 +3,15 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class FirebaseConfig {
   static FirebaseOptions get options {
-    // Fonction helper pour obtenir les variables d'environnement avec fallback sécurisé
     String getEnv(String key, {String fallback = ''}) {
       try {
         final value = dotenv.get(key, fallback: fallback);
         return value.isNotEmpty ? value : fallback;
       } catch (e) {
-        print('⚠️ Environment variable $key not found, using fallback');
         return fallback;
       }
     }
 
-    // Valeurs par défaut sûres pour permettre l'initialisation Firebase
-    // Même avec des valeurs vides, Firebase peut s'initialiser
     return FirebaseOptions(
       apiKey: getEnv('FIREBASE_API_KEY', fallback: 'demo_api_key'),
       appId: getEnv('FIREBASE_APP_ID', fallback: '1:demo:android:demo'),
@@ -25,7 +21,6 @@ class FirebaseConfig {
     );
   }
 
-  /// Vérifie si la configuration Firebase est réellement valide (pas juste des fallbacks)
   static bool isValid() {
     try {
       final opts = options;
