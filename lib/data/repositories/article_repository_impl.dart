@@ -16,6 +16,8 @@ class ArticleRepositoryImpl implements ArticleRepository {
     Category? category,
     int page = 1,
     String? query,
+    String? country,
+    String? language,
   }) async {
     try {
       // Try remote first
@@ -23,6 +25,8 @@ class ArticleRepositoryImpl implements ArticleRepository {
         category!,
         page: page,
         query: query,
+        country: country,
+        language: language,
       );
       // Save to local
       await localDataSource.saveArticles(remoteArticles);
