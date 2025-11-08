@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/article_model.dart';
 import '../../domain/entities/category.dart';
 
@@ -15,10 +16,18 @@ abstract class ArticleRemoteDataSource {
 
 class ArticleRemoteDataSourceImpl implements ArticleRemoteDataSource {
   final Dio dio;
-  final String apiKey = '6e109140efd34a0d805afe229f95f4b4'; // TODO: secure this
+  late final String apiKey;
   final Map<String, List<String>> _sourcesCache = {};
 
-  ArticleRemoteDataSourceImpl(this.dio);
+  ArticleRemoteDataSourceImpl(this.dio) {
+    try {
+      apiKey = dotenv.get('NEWS_API_KEY');
+      if (apiKey.isEmpty) throw Exception('API key is empty');
+    } catch (e) {
+      print('⚠️ News API key not found: $e. Please set NEWS_API_KEY in .env');
+      apiKey = '';
+    }
+  }
 
   @override
   Future<List<ArticleModel>> getArticlesByCategory(
@@ -28,6 +37,9 @@ class ArticleRemoteDataSourceImpl implements ArticleRemoteDataSource {
     String? country,
     String? language,
   }) async {
+    if (apiKey.isEmpty) {
+      return [];
+    }
     final searchQuery = query ?? _mapCategoryToQuery(category);
     final newsApiCategory = _mapCategoryToNewsApi(category);
     String url;
@@ -56,6 +68,9 @@ class ArticleRemoteDataSourceImpl implements ArticleRemoteDataSource {
 
   @override
   Future<List<String>> getSourcesForCategory(String newsApiCategory, {String? country}) async {
+    if (apiKey.isEmpty) {
+      return [];
+    }
     final cacheKey = '${newsApiCategory}_${country ?? 'all'}';
     if (_sourcesCache.containsKey(cacheKey)) {
       return _sourcesCache[cacheKey]!;

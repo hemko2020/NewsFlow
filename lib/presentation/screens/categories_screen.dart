@@ -39,9 +39,6 @@ class CategoriesScreen extends ConsumerWidget {
                       // Navigate to home screen with selected category
                       ref.read(selectedCategoryProvider.notifier).state =
                           category;
-                      ref
-                          .read(articleNotifierProvider.notifier)
-                          .selectCategory(category);
                       // Go back to home tab (index 0)
                       Navigator.of(context).popUntil((route) => route.isFirst);
                     },
