@@ -19,9 +19,6 @@ jobs:
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.24.0'
-          channel: 'stable'
 
       - name: Cache Flutter dependencies
         uses: actions/cache@v3
@@ -36,20 +33,19 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Format code
-        run: dart format lib/
-
       - name: Analyze project source
         run: flutter analyze --fatal-infos
 
-      - name: Run tests
-        run: flutter test --coverage
+      # Tests removed - add back when you have tests
+      # - name: Run tests
+      #   run: flutter test --coverage
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          file: coverage/lcov.info
-          fail_ci_if_error: false
+      # Coverage upload removed - add back with tests
+      # - name: Upload coverage to Codecov
+      #   uses: codecov/codecov-action@v3
+      #   with:
+      #     file: coverage/lcov.info
+      #     fail_ci_if_error: false
 
   # Job pour builder l'app Android
   build-android:
@@ -63,9 +59,6 @@ jobs:
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.24.0'
-          channel: 'stable'
 
       - name: Setup Java
         uses: actions/setup-java@v3
@@ -88,7 +81,7 @@ jobs:
         run: flutter build apk --release --split-per-abi
 
       - name: Upload APK artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: android-apk
           path: build/app/outputs/flutter-apk/*.apk
@@ -106,9 +99,6 @@ jobs:
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.24.0'
-          channel: 'stable'
 
       - name: Cache Flutter dependencies
         uses: actions/cache@v3

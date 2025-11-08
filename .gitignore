@@ -43,3 +43,42 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Environment variables
+.env
+# Firebase configuration
+google-services.json
+
+# Fichiers Flutter
+.dart_tool/
+.packages
+.pub/
+build/
+flutter_export_environment.sh
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+linux/flutter/generated_plugin_registrant.cc
+linux/flutter/generated_plugin_registrant.h
+linux/flutter/generated_plugins.cmake
+linux/flutter/ephemeral/.plugin_symlinks/flutter_secure_storage_linux
+linux/flutter/ephemeral/.plugin_symlinks/path_provider_linux
+linux/flutter/ephemeral/.plugin_symlinks/shared_preferences_linux
+macos/Flutter/GeneratedPluginRegistrant.swift
+macos/Flutter/ephemeral/Flutter-Generated.xcconfig
+windows/flutter/ephemeral/.plugin_symlinks/cloud_firestore
+windows/flutter/ephemeral/.plugin_symlinks/firebase_auth
+windows/flutter/ephemeral/.plugin_symlinks/firebase_core
+windows/flutter/ephemeral/.plugin_symlinks/geolocator_windows
+windows/flutter/ephemeral/.plugin_symlinks/path_provider_windows
+windows/flutter/ephemeral/.plugin_symlinks/shared_preferences_windows
