@@ -11,5 +11,7 @@ class GetArticles {
     Category? category,
     int page = 1,
     String? query,
-  }) => repository.getArticles(category: category, page: page, query: query);
+    String? country,
+    String? language,
+  }) => repository.getArticles(category: category, page: page, query: query, country: country, language: language);
 }

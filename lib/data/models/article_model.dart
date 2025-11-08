@@ -1,54 +1,66 @@
+// ignore_for_file: overridden_fields
+
+import 'package:json_annotation/json_annotation.dart';
 import '../../domain/entities/article.dart';
 import '../../domain/entities/category.dart';
 
+part 'article_model.g.dart';
+
+@JsonSerializable()
 class ArticleModel extends Article {
+  @override
+  final String id;
+  @override
+  final String title;
+  @override
+  final String description;
+  @override
+  final String url;
+  @override
+  final String source;
+  @override
+  final String? imageUrl;
+
+  @JsonKey(fromJson: _dateTimeFromJson, toJson: _dateTimeToJson)
+  @override
+  final DateTime publishedAt;
+
+  @JsonKey(unknownEnumValue: Category.technology)
+  @override
+  final Category category;
+
+  @override
+  final String? summary; // AI generated
+  @override
+  final String? sentiment; // positive, negative, neutral
+
   ArticleModel({
-    required super.id,
-    required super.title,
-    required super.description,
-    required super.url,
-    required super.source,
-    super.imageUrl,
-    required super.publishedAt,
-    required super.category,
-    super.summary,
-    super.sentiment,
-  });
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.url,
+    required this.source,
+    this.imageUrl,
+    required this.publishedAt,
+    required this.category,
+    this.summary,
+    this.sentiment,
+  }) : super(
+    id: id,
+    title: title,
+    description: description,
+    url: url,
+    source: source,
+    imageUrl: imageUrl,
+    publishedAt: publishedAt,
+    category: category,
+    summary: summary,
+    sentiment: sentiment,
+  );
 
-  factory ArticleModel.fromJson(Map<String, dynamic> json) {
-    return ArticleModel(
-      id: json['id'] ?? '',
-      title: json['title'] ?? '',
-      description: json['description'] ?? '',
-      url: json['url'] ?? '',
-      source: json['source'] ?? '',
-      imageUrl: json['imageUrl'],
-      publishedAt: DateTime.parse(
-        json['publishedAt'] ?? DateTime.now().toIso8601String(),
-      ),
-      category: Category.values.firstWhere(
-        (cat) => cat.name == json['category'],
-        orElse: () => Category.politics,
-      ),
-      summary: json['summary'],
-      sentiment: json['sentiment'],
-    );
-  }
+  factory ArticleModel.fromJson(Map<String, dynamic> json) => _$ArticleModelFromJson(json);
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'title': title,
-      'description': description,
-      'url': url,
-      'source': source,
-      'imageUrl': imageUrl,
-      'publishedAt': publishedAt.toIso8601String(),
-      'category': category.name,
-      'summary': summary,
-      'sentiment': sentiment,
-    };
-  }
+  Map<String, dynamic> toJson() => _$ArticleModelToJson(this);
 
   factory ArticleModel.fromEntity(Article article) {
     return ArticleModel(
@@ -68,7 +80,7 @@ class ArticleModel extends Article {
   // For NewsAPI response
   factory ArticleModel.fromNewsApiJson(Map<String, dynamic> json) {
     return ArticleModel(
-      id: json['url'] ?? '', // use url as id
+      id: json['url'] ?? '', 
       title: json['title'] ?? '',
       description: json['description'] ?? '',
       url: json['url'] ?? '',
@@ -77,7 +89,7 @@ class ArticleModel extends Article {
       publishedAt: DateTime.parse(
         json['publishedAt'] ?? DateTime.now().toIso8601String(),
       ),
-      category: Category.politics, // default, will be set by category
+      category: Category.technology,
     );
   }
 
@@ -108,3 +120,6 @@ class ArticleModel extends Article {
     );
   }
 }
+
+DateTime _dateTimeFromJson(String date) => DateTime.parse(date);
+String _dateTimeToJson(DateTime date) => date.toIso8601String();

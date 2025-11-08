@@ -41,6 +41,10 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Cette application utilise votre localisation pour afficher les actualités de votre pays.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Cette application utilise votre localisation pour afficher les actualités de votre pays.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>

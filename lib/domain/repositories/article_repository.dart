@@ -6,6 +6,8 @@ abstract class ArticleRepository {
     Category? category,
     int page = 1,
     String? query,
+    String? country,
+    String? language,
   });
   Future<Article> getArticleById(String id);
   Future<void> saveArticles(List<Article> articles);
