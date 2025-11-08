@@ -1,10 +1,55 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../presentation/providers/article_provider.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedCountry = ref.watch(selectedCountryProvider);
+    final selectedLanguage = ref.watch(selectedLanguageProvider);
+    final geolocationAsync = ref.watch(geolocationProvider);
+    final deviceLanguage = ref.watch(deviceLanguageProvider);
+
+    String getCountryName(String? code) {
+      if (code == null) return 'Automatique';
+      const countryNames = {
+        'us': 'États-Unis',
+        'fr': 'France',
+        'gb': 'Royaume-Uni',
+        'de': 'Allemagne',
+        'ca': 'Canada',
+        'au': 'Australie',
+        'jp': 'Japon',
+        'cn': 'Chine',
+        'in': 'Inde',
+        'br': 'Brésil',
+      };
+      return countryNames[code] ?? code.toUpperCase();
+    }
+
+    String getLanguageName(String? code) {
+      if (code == null) return 'Automatique (${getLanguageName(deviceLanguage)})';
+      const languageNames = {
+        'ar': 'العربية',
+        'en': 'English',
+        'de': 'Deutsch',
+        'es': 'Español',
+        'fr': 'Français',
+        'it': 'Italiano',
+        'he': 'עברית',
+        'nl': 'Nederlands',
+        'no': 'Norsk',
+        'pt': 'Português',
+        'ru': 'Русский',
+        'sv': 'Svenska',
+        'ud': 'Undefined',
+        'zh': '中文',
+      };
+      return languageNames[code] ?? code.toUpperCase();
+    }
+
     return Scaffold(
       appBar: AppBar(title: const Text('Profil')),
       body: ListView(
@@ -32,6 +77,27 @@ class ProfileScreen extends StatelessWidget {
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
+
+          // Country selection
+          ListTile(
+            leading: const Icon(Icons.location_on),
+            title: const Text('Pays des actualités'),
+            subtitle: Text(getCountryName(selectedCountry ?? geolocationAsync.maybeWhen(
+              data: (data) => data,
+              orElse: () => null,
+            ))),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _showCountryPicker(context, ref),
+          ),
+
+          // Language selection
+          ListTile(
+            leading: const Icon(Icons.language),
+            title: const Text('Langue des actualités'),
+            subtitle: Text(getLanguageName(selectedLanguage)),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _showLanguagePicker(context, ref),
+          ),
 
           // Notification settings
           ListTile(
@@ -118,6 +184,115 @@ class ProfileScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _showCountryPicker(BuildContext context, WidgetRef ref) {
+    const countries = {
+      null: 'Automatique (géolocalisation)',
+      'us': 'États-Unis',
+      'fr': 'France',
+      'gb': 'Royaume-Uni',
+      'de': 'Allemagne',
+      'ca': 'Canada',
+      'au': 'Australie',
+      'jp': 'Japon',
+      'cn': 'Chine',
+      'in': 'Inde',
+      'br': 'Brésil',
+      'es': 'Espagne',
+      'it': 'Italie',
+      'mx': 'Mexique',
+      'ar': 'Argentine',
+      'ru': 'Russie',
+      'za': 'Afrique du Sud',
+      'kr': 'Corée du Sud',
+      'nl': 'Pays-Bas',
+      'se': 'Suède',
+      'no': 'Norvège',
+      'dk': 'Danemark',
+      'fi': 'Finlande',
+      'pl': 'Pologne',
+      'pt': 'Portugal',
+      'tr': 'Turquie',
+      'th': 'Thaïlande',
+      'my': 'Malaisie',
+      'sg': 'Singapour',
+      'ch': 'Suisse',
+      'at': 'Autriche',
+      'be': 'Belgique',
+      'cz': 'République Tchèque',
+      'gr': 'Grèce',
+      'hu': 'Hongrie',
+      'ie': 'Irlande',
+      'il': 'Israël',
+      'nz': 'Nouvelle-Zélande',
+      'ph': 'Philippines',
+      'ro': 'Roumanie',
+      'sk': 'Slovaquie',
+      'si': 'Slovénie',
+      'ua': 'Ukraine',
+      've': 'Venezuela',
+      'vn': 'Vietnam',
+    };
+
+    final currentCountry = ref.read(selectedCountryProvider);
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return ListView(
+          children: countries.entries.map((entry) {
+            return ListTile(
+              title: Text(entry.value),
+              selected: entry.key == currentCountry,
+              onTap: () {
+                ref.read(selectedCountryProvider.notifier).setCountry(entry.key);
+                Navigator.of(context).pop();
+              },
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+
+  void _showLanguagePicker(BuildContext context, WidgetRef ref) {
+    const languages = {
+      null: 'Automatique',
+      'ar': 'العربية',
+      'en': 'English',
+      'de': 'Deutsch',
+      'es': 'Español',
+      'fr': 'Français',
+      'it': 'Italiano',
+      'he': 'עברית',
+      'nl': 'Nederlands',
+      'no': 'Norsk',
+      'pt': 'Português',
+      'ru': 'Русский',
+      'sv': 'Svenska',
+      'zh': '中文',
+    };
+
+    final currentLanguage = ref.read(selectedLanguageProvider);
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return ListView(
+          children: languages.entries.map((entry) {
+            return ListTile(
+              title: Text(entry.value),
+              selected: entry.key == currentLanguage,
+              onTap: () {
+                ref.read(selectedLanguageProvider.notifier).setLanguage(entry.key);
+                Navigator.of(context).pop();
+              },
+            );
+          }).toList(),
+        );
+      },
     );
   }
 }
