@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 enum Category {
+  general('Général', Icons.article, Colors.blue),  // Catégorie par défaut
   finance('Finance', Icons.attach_money, Colors.green),
   health('Santé', Icons.local_hospital, Colors.red),
   sciences('Sciences', Icons.science, Colors.cyan),

@@ -180,7 +180,7 @@ class ArticleNotifier extends StateNotifier<AsyncValue<List<Article>>> {
   final Logger _logger = Logger('ArticleNotifier');
 
   ArticleNotifier(this.getArticles)
-      : selectedCategory = Category.finance, // Default category
+      : selectedCategory = Category.general, // Default category
         super(AsyncValue.loading()) {
     // Don't call loadArticles in constructor - will be called by provider
   }
@@ -231,7 +231,7 @@ class ArticleNotifier extends StateNotifier<AsyncValue<List<Article>>> {
 }
 
 final selectedCategoryProvider = StateProvider<Category>(
-  (ref) => Category.finance,
+  (ref) => Category.general,
 );
 
 final articleNotifierProvider =
@@ -265,7 +265,7 @@ final articleNotifierProvider =
       final deviceLanguage = ref.read(deviceLanguageProvider);
       final geolocationAsync = ref.read(geolocationProvider);
       notifier.loadArticles(
-        category: Category.finance, // Default category
+        category: Category.general, // Default category
         selectedCountry: selectedCountry,
         selectedLanguage: selectedLanguage,
         deviceLanguage: deviceLanguage,

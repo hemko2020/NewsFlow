@@ -12,21 +12,14 @@ bool isFirebaseAvailable = false;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Load environment variables FIRST
   try {
     await dotenv.load();
   } catch (e) {
     // Could not load .env file
   }
 
-  try {
-    final apiKey = dotenv.get('NEWS_API_KEY');
-    if (apiKey.isEmpty || apiKey == 'your_news_api_key_here') {
-      // NEWS_API_KEY not set properly
-    }
-  } catch (e) {
-    // Could not read NEWS_API_KEY
-  }
-
+  // Setup service locator AFTER dotenv is loaded
   setupServiceLocator();
 
   try {

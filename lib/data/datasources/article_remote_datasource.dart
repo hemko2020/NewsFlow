@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../models/article_model.dart';
-import '../../domain/entities/category.dart';
+import 'package:newsflow/data/models/article_model.dart';
+import 'package:newsflow/domain/entities/category.dart';
 
 abstract class ArticleRemoteDataSource {
   Future<List<ArticleModel>> getArticlesByCategory(
@@ -21,7 +21,14 @@ class ArticleRemoteDataSourceImpl implements ArticleRemoteDataSource {
 
   ArticleRemoteDataSourceImpl(this.dio) {
     try {
-      apiKey = dotenv.get('NEWS_API_KEY');
+      // Essayer d'abord les variables d'environnement système (pour CI/production)
+      apiKey = dotenv.get('NEWS_API_KEY', fallback: '');
+
+      // Si pas trouvé dans .env, essayer les variables système
+      if (apiKey.isEmpty) {
+        apiKey = const String.fromEnvironment('NEWS_API_KEY', defaultValue: '');
+      }
+
       if (apiKey.isEmpty) throw Exception('API key is empty');
     } catch (e) {
       // News API key not found, articles will not load
@@ -53,7 +60,8 @@ class ArticleRemoteDataSourceImpl implements ArticleRemoteDataSource {
 
         if (sources.isNotEmpty) {
           final sourcesParam = sources.take(20).join(',');
-          String url = 'https://newsapi.org/v2/top-headlines?sources=$sourcesParam&apiKey=$apiKey&page=$page';
+          String url =
+              'https://newsapi.org/v2/top-headlines?sources=$sourcesParam&apiKey=$apiKey&page=$page';
 
           // Add language filter if specified
           if (language != null) {
@@ -80,10 +88,20 @@ class ArticleRemoteDataSourceImpl implements ArticleRemoteDataSource {
       }
 
       // Fallback: Use everything with category query
-      return _fetchArticlesFromEverythingApi(searchQuery, page, language, category);
+      return _fetchArticlesFromEverythingApi(
+        searchQuery,
+        page,
+        language,
+        category,
+      );
     } catch (e) {
       // If all fails, try general search without category
-      return _fetchArticlesFromEverythingApi(searchQuery, page, language, category);
+      return _fetchArticlesFromEverythingApi(
+        searchQuery,
+        page,
+        language,
+        category,
+      );
     }
   }
 
@@ -122,18 +140,20 @@ class ArticleRemoteDataSourceImpl implements ArticleRemoteDataSource {
 
   String _mapCategoryToQuery(Category category) {
     switch (category) {
+      case Category.general:
+        return '';
       case Category.finance:
-        return 'finance OR business OR economy';
+        return 'finance';
       case Category.health:
-        return 'health OR medical';
+        return 'health';
       case Category.technology:
-        return 'technology OR tech OR AI OR software';
+        return 'technology';
       case Category.sports:
-        return 'sports OR football OR basketball OR tennis';
+        return 'sports';
       case Category.entertainment:
-        return 'entertainment OR movie OR music OR celebrity';
+        return 'entertainment';
       case Category.sciences:
-        return 'science OR research OR discovery';
+        return 'science';
     }
   }
 
@@ -144,25 +164,41 @@ class ArticleRemoteDataSourceImpl implements ArticleRemoteDataSource {
     Category category,
   ) async {
     final languageParam = language != null ? '&language=$language' : '';
-    final url = 'https://newsapi.org/v2/everything?q=$query&sortBy=publishedAt&apiKey=$apiKey&page=$page$languageParam';
+    final encodedQuery = Uri.encodeQueryComponent(query);
+    final url =
+        'https://newsapi.org/v2/everything?q=$encodedQuery&sortBy=publishedAt&apiKey=$apiKey&page=$page$languageParam';
 
-    final response = await dio.get(url);
+    try {
+      final response = await dio.get(
+        url,
+        options: Options(
+          sendTimeout: const Duration(seconds: 10),
+          receiveTimeout: const Duration(seconds: 10),
+        ),
+      );
 
-    if (response.statusCode == 200) {
-      final data = response.data;
-      final articles = data['articles'] as List;
-      if (articles.isNotEmpty) {
-        return articles.map((json) {
-          final model = ArticleModel.fromNewsApiJson(json);
-          return model.copyWith(category: category);
-        }).toList();
+      if (response.statusCode == 200) {
+        final data = response.data;
+
+        if (data.containsKey('articles')) {
+          final articles = data['articles'] as List;
+          if (articles.isNotEmpty) {
+            return articles.map((json) {
+              final model = ArticleModel.fromNewsApiJson(json);
+              return model.copyWith(category: category);
+            }).toList();
+          }
+        }
       }
-    }
+    } catch (e) {}
+
     return [];
   }
 
   String? _mapCategoryToNewsApi(Category category) {
     switch (category) {
+      case Category.general:
+        return 'general';
       case Category.finance:
         return 'business';
       case Category.health:
