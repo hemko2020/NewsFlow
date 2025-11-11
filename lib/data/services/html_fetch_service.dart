@@ -1,9 +1,11 @@
 import 'package:http/http.dart' as http;
 import 'package:html/parser.dart' as html_parser;
 import 'package:html/dom.dart' as dom;
+import 'package:logging/logging.dart';
 
 class HtmlFetchService {
   final http.Client _client;
+  final Logger _logger = Logger('HtmlFetchService');
 
   HtmlFetchService(this._client);
 
@@ -19,7 +21,9 @@ class HtmlFetchService {
           'Connection': 'keep-alive',
           'Upgrade-Insecure-Requests': '1',
         },
-      );
+      ).timeout(const Duration(seconds: 15), onTimeout: () {
+        throw Exception('Request timed out');
+      });
 
       if (response.statusCode == 200) {
         final document = html_parser.parse(response.body);
@@ -108,7 +112,8 @@ class HtmlFetchService {
           element.remove();
         }
       } catch (e) {
-        // Ignore errors for selectors that don't exist
+        // Log errors for selectors that don't exist or cause issues
+        _logger.warning('Error removing selector: $selector - $e');
       }
     }
   }
@@ -142,6 +147,7 @@ class HtmlFetchService {
           break;
         }
       } catch (e) {
+        _logger.warning('Error with content selector: $selector - $e');
         continue;
       }
     }
@@ -335,8 +341,8 @@ class HtmlFetchService {
         </style>
       </head>
       <body>
-        <h2>Contenu non disponible</h2>
-        <p>Impossible de charger le contenu de cet article.</p>
+        <h2>Content not available</h2>
+        <p>Unable to load the content of this article.</p>
       </body>
       </html>
     ''';

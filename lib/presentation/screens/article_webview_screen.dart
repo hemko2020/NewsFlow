@@ -69,8 +69,31 @@ class _ArticleWebViewScreenState extends ConsumerState<ArticleWebViewScreen> {
               return NavigationDecision.navigate;
             }
 
-            // Pour les liens externes, ouvrir dans le navigateur externe
-            // Mais pour l'instant, on les bloque pour garder l'utilisateur dans l'app
+            // Pour les liens externes, demander confirmation à l'utilisateur
+            if (mounted) {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Ouvrir le lien'),
+                  content: const Text('Ce lien va ouvrir une page externe. Voulez-vous continuer ?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Annuler'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        // Ouvrir dans le navigateur externe
+                        launchUrl(Uri.parse(request.url.toString()),
+                            mode: LaunchMode.externalApplication);
+                      },
+                      child: const Text('Ouvrir'),
+                    ),
+                  ],
+                ),
+              );
+            }
             return NavigationDecision.prevent;
           },
         ),
@@ -110,6 +133,8 @@ class _ArticleWebViewScreenState extends ConsumerState<ArticleWebViewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isFavorite = ref.watch(favoritesNotifierProvider).any((fav) => fav.id == widget.article.id);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -128,12 +153,8 @@ class _ArticleWebViewScreenState extends ConsumerState<ArticleWebViewScreen> {
           // Favorite button
           IconButton(
             icon: Icon(
-              ref.watch(favoritesNotifierProvider).any((fav) => fav.id == widget.article.id)
-                  ? Icons.favorite
-                  : Icons.favorite_border,
-              color: ref.watch(favoritesNotifierProvider).any((fav) => fav.id == widget.article.id)
-                  ? Colors.red
-                  : Colors.white,
+              isFavorite ? Icons.favorite : Icons.favorite_border,
+              color: isFavorite ? Colors.red : Colors.white,
             ),
             onPressed: () {
               ref.read(favoritesNotifierProvider.notifier).toggleFavorite(widget.article);

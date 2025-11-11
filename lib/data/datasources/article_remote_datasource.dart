@@ -80,46 +80,10 @@ class ArticleRemoteDataSourceImpl implements ArticleRemoteDataSource {
       }
 
       // Fallback: Use everything with category query
-      final languageParam = language != null ? '&language=$language' : '';
-      final url = 'https://newsapi.org/v2/everything?q=$searchQuery&sortBy=publishedAt&apiKey=$apiKey&page=$page$languageParam';
-
-      try {
-        final response = await dio.get(url);
-
-        if (response.statusCode == 200) {
-          final data = response.data;
-          final articles = data['articles'] as List;
-          return articles.map((json) {
-            final model = ArticleModel.fromNewsApiJson(json);
-            return model.copyWith(category: category);
-          }).toList();
-        } else {
-          throw Exception('Failed to load articles');
-        }
-      } catch (e) {
-        // Network error for everything API
-        throw e; // Re-throw to trigger fallback
-      }
+      return _fetchArticlesFromEverythingApi(searchQuery, page, language, category);
     } catch (e) {
       // If all fails, try general search without category
-      try {
-        final languageParam = language != null ? '&language=$language' : '';
-        final url = 'https://newsapi.org/v2/everything?q=$searchQuery&sortBy=publishedAt&apiKey=$apiKey&page=$page$languageParam';
-
-        final response = await dio.get(url);
-
-        if (response.statusCode == 200) {
-          final data = response.data;
-          final articles = data['articles'] as List;
-          return articles.map((json) {
-            final model = ArticleModel.fromNewsApiJson(json);
-            return model.copyWith(category: category);
-          }).toList();
-        }
-      } catch (fallbackError) {
-        // Fallback also failed
-      }
-      return [];
+      return _fetchArticlesFromEverythingApi(searchQuery, page, language, category);
     }
   }
 
@@ -171,6 +135,30 @@ class ArticleRemoteDataSourceImpl implements ArticleRemoteDataSource {
       case Category.sciences:
         return 'science OR research OR discovery';
     }
+  }
+
+  Future<List<ArticleModel>> _fetchArticlesFromEverythingApi(
+    String query,
+    int page,
+    String? language,
+    Category category,
+  ) async {
+    final languageParam = language != null ? '&language=$language' : '';
+    final url = 'https://newsapi.org/v2/everything?q=$query&sortBy=publishedAt&apiKey=$apiKey&page=$page$languageParam';
+
+    final response = await dio.get(url);
+
+    if (response.statusCode == 200) {
+      final data = response.data;
+      final articles = data['articles'] as List;
+      if (articles.isNotEmpty) {
+        return articles.map((json) {
+          final model = ArticleModel.fromNewsApiJson(json);
+          return model.copyWith(category: category);
+        }).toList();
+      }
+    }
+    return [];
   }
 
   String? _mapCategoryToNewsApi(Category category) {

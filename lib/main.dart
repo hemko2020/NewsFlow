@@ -36,13 +36,12 @@ void main() async {
     if (isValid) {
       try {
         await Firebase.initializeApp(
-          name: 'newsflow-6b8c1',
+          name: FirebaseConfig.appName,
           options: FirebaseConfig.options,
         );
         isFirebaseAvailable = true;
       } catch (e) {
-        final errorString = e.toString().toLowerCase();
-        if (errorString.contains('duplicate') && errorString.contains('app')) {
+        if (e is FirebaseException && e.code == 'duplicate-app') {
           isFirebaseAvailable = true; // App already exists, this is fine
         } else {
           isFirebaseAvailable = false;

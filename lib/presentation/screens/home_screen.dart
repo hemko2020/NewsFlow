@@ -16,6 +16,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
   final ScrollController _categoryScrollController = ScrollController();
+  WidgetRef? _ref;
 
   @override
   void initState() {
@@ -46,10 +47,17 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels ==
-        _scrollController.position.maxScrollExtent) {
-      // Reached the end, load more articles
-      // We'll use the ref from the build method instead of storing it
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      // Reached near the end (200 pixels tolerance), load more articles
+      if (_ref != null) {
+        _ref!.read(articleNotifierProvider.notifier).loadMore(
+          selectedCountry: _ref!.read(selectedCountryProvider),
+          selectedLanguage: _ref!.read(selectedLanguageProvider),
+          deviceLanguage: _ref!.read(deviceLanguageProvider),
+          geolocationAsync: _ref!.read(geolocationProvider),
+        );
+      }
     }
   }
 
@@ -93,6 +101,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Consumer(
       builder: (context, ref, child) {
+        _ref = ref; // Store ref for use in _onScroll
         final asyncArticles = ref.watch(articleNotifierProvider);
         final categories = ref.watch(categoriesProvider);
 

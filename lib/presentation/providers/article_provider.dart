@@ -93,17 +93,17 @@ class CountryNotifier extends StateNotifier<String?> {
     if (savedCountry != null) {
       state = savedCountry;
     } else {
-      // Si aucun pays sauvegardé, vérifier la géolocalisation
+      // If no saved country, check geolocation
       try {
         final geolocationAsync = await ref.read(geolocationProvider.future);
         if (geolocationAsync == 'fr') {
-          // L'utilisateur est en France, définir "fr" comme pays par défaut
+          // User is in France, set "fr" as default country
           state = 'fr';
           await prefs.setString('selectedCountry', 'fr');
         }
-        // Sinon laisser null pour utiliser la langue
+        // Otherwise leave null to use language
       } catch (e) {
-        // Si erreur de géolocalisation, utiliser la langue par défaut
+        // If geolocation error, use default language
       }
     }
   }
@@ -138,21 +138,21 @@ class LanguageNotifier extends StateNotifier<String?> {
     if (savedLanguage != null) {
       state = savedLanguage;
     } else {
-      // Si aucune langue sauvegardée, vérifier si l'utilisateur est en France
+      // If no saved language, check if user is in France
       try {
         final geolocationAsync = await ref.read(geolocationProvider.future);
         if (geolocationAsync == 'fr') {
-          // L'utilisateur est en France, définir "fr" comme langue par défaut
+          // User is in France, set "fr" as default language
           state = 'fr';
           await prefs.setString('selectedLanguage', 'fr');
         } else {
-          // Sinon utiliser la langue du device
+          // Otherwise use device language
           final deviceLanguage = ref.read(deviceLanguageProvider);
           state = deviceLanguage;
           await prefs.setString('selectedLanguage', deviceLanguage);
         }
       } catch (e) {
-        // Si erreur de géolocalisation, utiliser la langue du device
+        // If geolocation error, use device language
         final deviceLanguage = ref.read(deviceLanguageProvider);
         state = deviceLanguage;
         await prefs.setString('selectedLanguage', deviceLanguage);
@@ -254,7 +254,8 @@ final articleNotifierProvider =
             geolocationAsync: geolocationAsync,
           );
         } catch (e) {
-          // Don't crash the app, just log the error
+          // Log the error but don't crash the app
+          Logger('articleNotifierProvider').severe('Error loading articles on category change: $e');
         }
       });
 

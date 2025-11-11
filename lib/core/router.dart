@@ -12,7 +12,7 @@ final GoRouter router = GoRouter(
   ],
   errorBuilder: (context, state) => Scaffold(
     body: Center(
-      child: Text('Page not found: ${state.error}'),
+      child: Text('Page not found: ${state.error?.toString() ?? 'Unknown error'}'),
     ),
   ),
 );
