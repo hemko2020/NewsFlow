@@ -82,3 +82,8 @@ windows/flutter/ephemeral/.plugin_symlinks/firebase_core
 windows/flutter/ephemeral/.plugin_symlinks/geolocator_windows
 windows/flutter/ephemeral/.plugin_symlinks/path_provider_windows
 windows/flutter/ephemeral/.plugin_symlinks/shared_preferences_windows
+ios/Runner.xcodeproj/project.pbxproj
+linux/flutter/ephemeral/.plugin_symlinks 2/flutter_secure_storage_linux
+linux/flutter/ephemeral/.plugin_symlinks 2/path_provider_linux
+linux/flutter/ephemeral/.plugin_symlinks 2/shared_preferences_linux
+ios/Runner.xcodeproj/project.pbxproj

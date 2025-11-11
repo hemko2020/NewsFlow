@@ -11,7 +11,7 @@ bool isFirebaseAvailable = false;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   try {
     await dotenv.load();
   } catch (e) {
@@ -31,9 +31,7 @@ void main() async {
 
   try {
     if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp(
-        options: FirebaseConfig.options,
-      );
+      await Firebase.initializeApp(options: FirebaseConfig.options);
     }
     isFirebaseAvailable = true;
   } catch (e) {

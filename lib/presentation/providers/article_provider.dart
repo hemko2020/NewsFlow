@@ -159,15 +159,19 @@ class ArticleNotifier extends StateNotifier<AsyncValue<List<Article>>> {
 
     try {
       final articles = await getArticles(category: cat, page: page, country: param['country'], language: param['language']);
-      if (page == 1) {
-        state = AsyncValue.data(articles);
-      } else {
-        state = AsyncValue.data([...state.value!, ...articles]);
+      if (mounted) {
+        if (page == 1) {
+          state = AsyncValue.data(articles);
+        } else {
+          state = AsyncValue.data([...state.value!, ...articles]);
+        }
+        if (loadMore) currentPage = page;
       }
-      if (loadMore) currentPage = page;
     } catch (e) {
       _logger.severe('Error loading articles: $e');
-      state = AsyncValue.error(e, StackTrace.current);
+      if (mounted) {
+        state = AsyncValue.error(e, StackTrace.current);
+      }
     }
   }
 
@@ -224,7 +228,7 @@ class SearchNotifier extends StateNotifier<List<Article>> {
 
   Future<void> searchArticles(String query) async {
     if (query.isEmpty) {
-      state = [];
+      if (mounted) state = [];
       return;
     }
 
@@ -235,10 +239,10 @@ class SearchNotifier extends StateNotifier<List<Article>> {
         page: 1,
         query: query,
       );
-      state = articles;
+      if (mounted) state = articles;
     } catch (e) {
       _logger.severe('Error searching articles: $e');
-      state = [];
+      if (mounted) state = [];
     }
   }
 }
@@ -258,7 +262,7 @@ class FavoritesNotifier extends StateNotifier<List<Article>> {
 
   Future<void> loadFavorites() async {
     final favorites = await repository.getFavoriteArticles();
-    state = favorites;
+    if (mounted) state = favorites;
   }
 
   Future<void> toggleFavorite(Article article) async {

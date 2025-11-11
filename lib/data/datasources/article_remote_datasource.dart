@@ -44,13 +44,18 @@ class ArticleRemoteDataSourceImpl implements ArticleRemoteDataSource {
     final newsApiCategory = _mapCategoryToNewsApi(category);
     String url;
     if (newsApiCategory != null) {
-      final sources = await getSourcesForCategory(newsApiCategory, country: country);
+      final sources = await getSourcesForCategory(
+        newsApiCategory,
+        country: country,
+      );
       final sourcesParam = sources.take(20).join(',');
-      url = 'https://newsapi.org/v2/top-headlines?sources=$sourcesParam&apiKey=$apiKey&page=$page';
+      url =
+          'https://newsapi.org/v2/top-headlines?sources=$sourcesParam&apiKey=$apiKey&page=$page';
     } else {
       // Use everything with language if specified
       final languageParam = language != null ? '&language=$language' : '';
-      url = 'https://newsapi.org/v2/everything?q=$searchQuery&sortBy=publishedAt&apiKey=$apiKey&page=$page$languageParam';
+      url =
+          'https://newsapi.org/v2/everything?q=$searchQuery&sortBy=publishedAt&apiKey=$apiKey&page=$page$languageParam';
     }
     final response = await dio.get(url);
 
@@ -67,7 +72,10 @@ class ArticleRemoteDataSourceImpl implements ArticleRemoteDataSource {
   }
 
   @override
-  Future<List<String>> getSourcesForCategory(String newsApiCategory, {String? country}) async {
+  Future<List<String>> getSourcesForCategory(
+    String newsApiCategory, {
+    String? country,
+  }) async {
     if (apiKey.isEmpty) {
       return [];
     }
@@ -76,13 +84,16 @@ class ArticleRemoteDataSourceImpl implements ArticleRemoteDataSource {
       return _sourcesCache[cacheKey]!;
     }
     final countryParam = country != null ? '&country=$country' : '';
-    final url = 'https://newsapi.org/v2/sources?category=$newsApiCategory$countryParam&apiKey=$apiKey';
+    final url =
+        'https://newsapi.org/v2/sources?category=$newsApiCategory$countryParam&apiKey=$apiKey';
     final response = await dio.get(url);
 
     if (response.statusCode == 200) {
       final data = response.data;
       final sources = data['sources'] as List;
-      final sourceIds = sources.map((source) => source['id'] as String).toList();
+      final sourceIds = sources
+          .map((source) => source['id'] as String)
+          .toList();
       _sourcesCache[cacheKey] = sourceIds;
       return sourceIds;
     } else {
