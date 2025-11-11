@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 import '../providers/article_provider.dart';
 import '../widgets/article_card.dart';
 
@@ -50,7 +51,7 @@ class FavoritesScreen extends ConsumerWidget {
                     return ArticleCard(
                       article: article,
                       onTap: () {
-                        // TODO: Open article
+                        ref.read(selectedArticleProvider.notifier).state = article;
                       },
                       onFavorite: () {
                         // Remove from favorites
@@ -59,7 +60,7 @@ class FavoritesScreen extends ConsumerWidget {
                             .toggleFavorite(article);
                       },
                       onShare: () {
-                        // TODO: share article
+                        Share.share('${article.title}\n\n${article.url}');
                       },
                       favoriteIcon: const Icon(
                         Icons.favorite,
