@@ -190,7 +190,9 @@ class ArticleRemoteDataSourceImpl implements ArticleRemoteDataSource {
           }
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      // Ignore network errors and return empty list
+    }
 
     return [];
   }
