@@ -2,6 +2,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class FirebaseConfig {
+  static const String appName = 'newsflow-6b8c1';
+
   static FirebaseOptions get options {
     String getEnv(String key, {String fallback = ''}) {
       try {
