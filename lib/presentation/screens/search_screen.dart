@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 import '../providers/article_provider.dart';
 import '../widgets/article_card.dart';
 
@@ -86,13 +87,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 return ArticleCard(
                   article: article,
                   onTap: () {
-                    // TODO: Open article
+                    ref.read(selectedArticleProvider.notifier).state = article;
                   },
                   onFavorite: () {
-                    // TODO: toggle favorite
+                    ref.read(favoritesNotifierProvider.notifier).toggleFavorite(article);
                   },
                   onShare: () {
-                    // TODO: share article
+                    Share.share('${article.title}\n\n${article.url}');
                   },
                 );
               }, childCount: searchResults.length),

@@ -5,7 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'core/firebase_config.dart';
 import 'core/app.dart';
 import 'core/service_locator.dart';
-import 'presentation/screens/main_navigation.dart';
+import 'core/router.dart';
 
 bool isFirebaseAvailable = false;
 
@@ -30,10 +30,27 @@ void main() async {
   setupServiceLocator();
 
   try {
-    if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp(options: FirebaseConfig.options);
+    // Check if Firebase config is valid before initializing
+    final isValid = FirebaseConfig.isValid();
+
+    if (isValid) {
+      try {
+        await Firebase.initializeApp(
+          name: 'newsflow-6b8c1',
+          options: FirebaseConfig.options,
+        );
+        isFirebaseAvailable = true;
+      } catch (e) {
+        final errorString = e.toString().toLowerCase();
+        if (errorString.contains('duplicate') && errorString.contains('app')) {
+          isFirebaseAvailable = true; // App already exists, this is fine
+        } else {
+          isFirebaseAvailable = false;
+        }
+      }
+    } else {
+      isFirebaseAvailable = false;
     }
-    isFirebaseAvailable = true;
   } catch (e) {
     isFirebaseAvailable = false;
   }
@@ -46,11 +63,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'NewsFlow',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const MainNavigation(),
+      routerConfig: router,
     );
   }
 }

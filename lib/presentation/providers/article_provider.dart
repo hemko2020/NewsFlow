@@ -69,26 +69,42 @@ final geolocationProvider = FutureProvider<String?>((ref) async {
       return countryCode;
     }
   } catch (e) {
-    // Handle error
+    // Error in geolocation
   }
   return null;
 });
 
 // Provider for selected country
 final selectedCountryProvider = StateNotifierProvider<CountryNotifier, String?>((ref) {
-  return CountryNotifier();
+  return CountryNotifier(ref);
 });
 
 class CountryNotifier extends StateNotifier<String?> {
-  CountryNotifier() : super(null) {
+  final Ref ref;
+
+  CountryNotifier(this.ref) : super(null) {
     _loadCountry();
   }
 
   Future<void> _loadCountry() async {
     final prefs = await SharedPreferences.getInstance();
-    final country = prefs.getString('selectedCountry');
-    if (country != null) {
-      state = country;
+    final savedCountry = prefs.getString('selectedCountry');
+
+    if (savedCountry != null) {
+      state = savedCountry;
+    } else {
+      // Si aucun pays sauvegardé, vérifier la géolocalisation
+      try {
+        final geolocationAsync = await ref.read(geolocationProvider.future);
+        if (geolocationAsync == 'fr') {
+          // L'utilisateur est en France, définir "fr" comme pays par défaut
+          state = 'fr';
+          await prefs.setString('selectedCountry', 'fr');
+        }
+        // Sinon laisser null pour utiliser la langue
+      } catch (e) {
+        // Si erreur de géolocalisation, utiliser la langue par défaut
+      }
     }
   }
 
@@ -105,19 +121,42 @@ class CountryNotifier extends StateNotifier<String?> {
 
 // Provider for selected language
 final selectedLanguageProvider = StateNotifierProvider<LanguageNotifier, String?>((ref) {
-  return LanguageNotifier();
+  return LanguageNotifier(ref);
 });
 
 class LanguageNotifier extends StateNotifier<String?> {
-  LanguageNotifier() : super(null) {
+  final Ref ref;
+
+  LanguageNotifier(this.ref) : super(null) {
     _loadLanguage();
   }
 
   Future<void> _loadLanguage() async {
     final prefs = await SharedPreferences.getInstance();
-    final language = prefs.getString('selectedLanguage');
-    if (language != null) {
-      state = language;
+    final savedLanguage = prefs.getString('selectedLanguage');
+
+    if (savedLanguage != null) {
+      state = savedLanguage;
+    } else {
+      // Si aucune langue sauvegardée, vérifier si l'utilisateur est en France
+      try {
+        final geolocationAsync = await ref.read(geolocationProvider.future);
+        if (geolocationAsync == 'fr') {
+          // L'utilisateur est en France, définir "fr" comme langue par défaut
+          state = 'fr';
+          await prefs.setString('selectedLanguage', 'fr');
+        } else {
+          // Sinon utiliser la langue du device
+          final deviceLanguage = ref.read(deviceLanguageProvider);
+          state = deviceLanguage;
+          await prefs.setString('selectedLanguage', deviceLanguage);
+        }
+      } catch (e) {
+        // Si erreur de géolocalisation, utiliser la langue du device
+        final deviceLanguage = ref.read(deviceLanguageProvider);
+        state = deviceLanguage;
+        await prefs.setString('selectedLanguage', deviceLanguage);
+      }
     }
   }
 
@@ -136,16 +175,23 @@ class ArticleNotifier extends StateNotifier<AsyncValue<List<Article>>> {
   final GetArticles getArticles;
   Category selectedCategory;
   int currentPage = 1;
+  bool _isLoading = false; // Add loading flag to prevent concurrent requests
 
   final Logger _logger = Logger('ArticleNotifier');
 
-  ArticleNotifier(this.getArticles, {Category? initialCategory})
-      : selectedCategory = initialCategory ?? Category.technology,
+  ArticleNotifier(this.getArticles)
+      : selectedCategory = Category.finance, // Default category
         super(AsyncValue.loading()) {
     // Don't call loadArticles in constructor - will be called by provider
   }
 
   Future<void> loadArticles({Category? category, bool loadMore = false, String? selectedCountry, String? selectedLanguage, String? deviceLanguage, AsyncValue<String?>? geolocationAsync}) async {
+    // Prevent concurrent requests
+    if (_isLoading && !loadMore) {
+      return;
+    }
+
+    _isLoading = true;
     final cat = category ?? selectedCategory;
     final page = loadMore ? currentPage + 1 : 1;
     final country = selectedCountry ?? geolocationAsync?.maybeWhen(
@@ -159,6 +205,7 @@ class ArticleNotifier extends StateNotifier<AsyncValue<List<Article>>> {
 
     try {
       final articles = await getArticles(category: cat, page: page, country: param['country'], language: param['language']);
+
       if (mounted) {
         if (page == 1) {
           state = AsyncValue.data(articles);
@@ -172,6 +219,8 @@ class ArticleNotifier extends StateNotifier<AsyncValue<List<Article>>> {
       if (mounted) {
         state = AsyncValue.error(e, StackTrace.current);
       }
+    } finally {
+      _isLoading = false;
     }
   }
 
@@ -182,38 +231,46 @@ class ArticleNotifier extends StateNotifier<AsyncValue<List<Article>>> {
 }
 
 final selectedCategoryProvider = StateProvider<Category>(
-  (ref) => Category.technology,
+  (ref) => Category.finance,
 );
 
 final articleNotifierProvider =
     StateNotifierProvider<ArticleNotifier, AsyncValue<List<Article>>>((ref) {
       final getArticles = ref.watch(getArticlesProvider);
-      final selectedCategory = ref.watch(selectedCategoryProvider);
-      final notifier = ArticleNotifier(getArticles, initialCategory: selectedCategory);
+      final notifier = ArticleNotifier(getArticles);
+
+      // Watch for category changes and load articles
+      ref.listen(selectedCategoryProvider, (previous, next) {
+        try {
+          final selectedCountry = ref.read(selectedCountryProvider);
+          final selectedLanguage = ref.read(selectedLanguageProvider);
+          final deviceLanguage = ref.read(deviceLanguageProvider);
+          final geolocationAsync = ref.read(geolocationProvider);
+          notifier.loadArticles(
+            category: next,
+            selectedCountry: selectedCountry,
+            selectedLanguage: selectedLanguage,
+            deviceLanguage: deviceLanguage,
+            geolocationAsync: geolocationAsync,
+          );
+        } catch (e) {
+          // Don't crash the app, just log the error
+        }
+      });
+
+      // Initial load with default category
       final selectedCountry = ref.read(selectedCountryProvider);
       final selectedLanguage = ref.read(selectedLanguageProvider);
       final deviceLanguage = ref.read(deviceLanguageProvider);
       final geolocationAsync = ref.read(geolocationProvider);
       notifier.loadArticles(
-        category: selectedCategory,
+        category: Category.finance, // Default category
         selectedCountry: selectedCountry,
         selectedLanguage: selectedLanguage,
         deviceLanguage: deviceLanguage,
         geolocationAsync: geolocationAsync,
       );
-      ref.listen(selectedCategoryProvider, (previous, next) {
-        final selectedCountry = ref.read(selectedCountryProvider);
-        final selectedLanguage = ref.read(selectedLanguageProvider);
-        final deviceLanguage = ref.read(deviceLanguageProvider);
-        final geolocationAsync = ref.read(geolocationProvider);
-        notifier.loadArticles(
-          category: next,
-          selectedCountry: selectedCountry,
-          selectedLanguage: selectedLanguage,
-          deviceLanguage: deviceLanguage,
-          geolocationAsync: geolocationAsync,
-        );
-      });
+
       return notifier;
     });
 
@@ -276,5 +333,8 @@ final favoritesNotifierProvider =
       final repository = ref.watch(articleRepositoryProvider);
       return FavoritesNotifier(repository);
     });
+
+// Provider for selected article (for detail view)
+final selectedArticleProvider = StateProvider<Article?>((ref) => null);
 
 final categoriesProvider = Provider<List<Category>>((ref) => Category.values);
