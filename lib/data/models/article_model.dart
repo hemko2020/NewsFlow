@@ -33,6 +33,8 @@ class ArticleModel extends Article {
   final String? summary; // AI generated
   @override
   final String? sentiment; // positive, negative, neutral
+  @override
+  final String? content;
 
   ArticleModel({
     required this.id,
@@ -45,20 +47,23 @@ class ArticleModel extends Article {
     required this.category,
     this.summary,
     this.sentiment,
+    this.content,
   }) : super(
-    id: id,
-    title: title,
-    description: description,
-    url: url,
-    source: source,
-    imageUrl: imageUrl,
-    publishedAt: publishedAt,
-    category: category,
-    summary: summary,
-    sentiment: sentiment,
-  );
+         id: id,
+         title: title,
+         description: description,
+         url: url,
+         source: source,
+         imageUrl: imageUrl,
+         publishedAt: publishedAt,
+         category: category,
+         summary: summary,
+         sentiment: sentiment,
+         content: content,
+       );
 
-  factory ArticleModel.fromJson(Map<String, dynamic> json) => _$ArticleModelFromJson(json);
+  factory ArticleModel.fromJson(Map<String, dynamic> json) =>
+      _$ArticleModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$ArticleModelToJson(this);
 
@@ -74,15 +79,17 @@ class ArticleModel extends Article {
       category: article.category,
       summary: article.summary,
       sentiment: article.sentiment,
+      content: article.content,
     );
   }
 
   // For NewsAPI response
   factory ArticleModel.fromNewsApiJson(Map<String, dynamic> json) {
     return ArticleModel(
-      id: json['url'] ?? '', 
+      id: json['url'] ?? '',
       title: json['title'] ?? '',
       description: json['description'] ?? '',
+      content: json['content'],
       url: json['url'] ?? '',
       source: json['source']?['name'] ?? '',
       imageUrl: json['urlToImage'],
@@ -105,6 +112,7 @@ class ArticleModel extends Article {
     Category? category,
     String? summary,
     String? sentiment,
+    String? content,
   }) {
     return ArticleModel(
       id: id ?? this.id,
@@ -117,6 +125,7 @@ class ArticleModel extends Article {
       category: category ?? this.category,
       summary: summary ?? this.summary,
       sentiment: sentiment ?? this.sentiment,
+      content: content ?? this.content,
     );
   }
 }

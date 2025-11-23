@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../presentation/providers/article_provider.dart';
 
+import '../../core/constants/strings.dart';
+
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
@@ -13,7 +15,7 @@ class ProfileScreen extends ConsumerWidget {
     final deviceLanguage = ref.watch(deviceLanguageProvider);
 
     String getCountryName(String? code) {
-      if (code == null) return 'Automatique';
+      if (code == null) return AppStrings.automatic;
       const countryNames = {
         'us': 'États-Unis',
         'fr': 'France',
@@ -30,7 +32,8 @@ class ProfileScreen extends ConsumerWidget {
     }
 
     String getLanguageName(String? code) {
-      if (code == null) return 'Automatique (${getLanguageName(deviceLanguage)})';
+      if (code == null)
+        return '${AppStrings.automatic} (${getLanguageName(deviceLanguage)})';
       const languageNames = {
         'ar': 'العربية',
         'en': 'English',
@@ -51,21 +54,36 @@ class ProfileScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profil')),
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        title: const Text(
+          AppStrings.profileTitle,
+          style: TextStyle(color: Colors.white, fontFamily: 'Serif'),
+        ),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           // Profile header
-          const CircleAvatar(radius: 50, child: Icon(Icons.person, size: 50)),
+          const CircleAvatar(
+            radius: 50,
+            backgroundColor: Color(0xFF1C1C1E),
+            child: Icon(Icons.person, size: 50, color: Colors.white),
+          ),
           const SizedBox(height: 16),
           const Text(
-            'Utilisateur NewsFlow',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            AppStrings.defaultUserName,
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           const Text(
-            'newsflow@example.com',
+            AppStrings.defaultUserEmail,
             style: TextStyle(color: Colors.grey, fontSize: 16),
             textAlign: TextAlign.center,
           ),
@@ -73,75 +91,76 @@ class ProfileScreen extends ConsumerWidget {
 
           // Settings
           const Text(
-            'Paramètres',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            AppStrings.settingsTitle,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
           const SizedBox(height: 16),
 
           // Country selection
-          ListTile(
-            leading: const Icon(Icons.location_on),
-            title: const Text('Pays des actualités'),
-            subtitle: Text(getCountryName(selectedCountry ?? geolocationAsync.maybeWhen(
-              data: (data) => data,
-              orElse: () => null,
-            ))),
-            trailing: const Icon(Icons.chevron_right),
+          _buildSettingsTile(
+            context,
+            icon: Icons.location_on,
+            title: AppStrings.countrySettings,
+            subtitle: getCountryName(
+              selectedCountry ??
+                  geolocationAsync.maybeWhen(
+                    data: (data) => data,
+                    orElse: () => null,
+                  ),
+            ),
             onTap: () => _showCountryPicker(context, ref),
           ),
 
           // Language selection
-          ListTile(
-            leading: const Icon(Icons.language),
-            title: const Text('Langue des actualités'),
-            subtitle: Text(getLanguageName(selectedLanguage)),
-            trailing: const Icon(Icons.chevron_right),
+          _buildSettingsTile(
+            context,
+            icon: Icons.language,
+            title: AppStrings.languageSettings,
+            subtitle: getLanguageName(selectedLanguage),
             onTap: () => _showLanguagePicker(context, ref),
           ),
 
           // Notification settings
-          ListTile(
-            leading: const Icon(Icons.notifications),
-            title: const Text('Notifications'),
-            subtitle: const Text('Recevoir des notifications d\'articles'),
+          _buildSettingsTile(
+            context,
+            icon: Icons.notifications,
+            title: AppStrings.notificationsSettings,
+            subtitle: AppStrings.notificationsSubtitle,
             trailing: Switch(
               value: true,
               onChanged: (value) {
                 // TODO: toggle notifications
               },
+              activeColor: Colors.red,
             ),
           ),
 
           // Dark mode
-          ListTile(
-            leading: const Icon(Icons.dark_mode),
-            title: const Text('Mode sombre'),
-            subtitle: const Text('Activer le thème sombre'),
+          _buildSettingsTile(
+            context,
+            icon: Icons.dark_mode,
+            title: AppStrings.darkModeSettings,
+            subtitle: AppStrings.darkModeSubtitle,
             trailing: Switch(
-              value: false,
+              value: true, // Always true for now as we enforced dark mode
               onChanged: (value) {
                 // TODO: toggle dark mode
               },
+              activeColor: Colors.red,
             ),
           ),
 
-          // Language
-          ListTile(
-            leading: const Icon(Icons.language),
-            title: const Text('Langue'),
-            subtitle: const Text('Français'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              // TODO: change language
-            },
-          ),
-
           // About
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.info),
-            title: const Text('À propos'),
-            subtitle: const Text('Version 1.0.0'),
+          const Divider(color: Colors.grey),
+          _buildSettingsTile(
+            context,
+            icon: Icons.info,
+            title: AppStrings.aboutSettings,
+            subtitle: 'Version 1.0.0',
             onTap: () {
               showAboutDialog(
                 context: context,
@@ -153,29 +172,31 @@ class ProfileScreen extends ConsumerWidget {
           ),
 
           // Privacy policy
-          ListTile(
-            leading: const Icon(Icons.privacy_tip),
-            title: const Text('Politique de confidentialité'),
+          _buildSettingsTile(
+            context,
+            icon: Icons.privacy_tip,
+            title: AppStrings.privacyPolicy,
             onTap: () {
               // TODO: show privacy policy
             },
           ),
 
           // Terms of service
-          ListTile(
-            leading: const Icon(Icons.description),
-            title: const Text('Conditions d\'utilisation'),
+          _buildSettingsTile(
+            context,
+            icon: Icons.description,
+            title: AppStrings.termsOfService,
             onTap: () {
               // TODO: show terms
             },
           ),
 
-          const Divider(),
+          const Divider(color: Colors.grey),
           // Sign out
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
             title: const Text(
-              'Se déconnecter',
+              AppStrings.signOut,
               style: TextStyle(color: Colors.red),
             ),
             onTap: () {
@@ -187,9 +208,32 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
+  Widget _buildSettingsTile(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    String? subtitle,
+    Widget? trailing,
+    VoidCallback? onTap,
+  }) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.white),
+      title: Text(title, style: const TextStyle(color: Colors.white)),
+      subtitle: subtitle != null
+          ? Text(subtitle, style: const TextStyle(color: Colors.grey))
+          : null,
+      trailing:
+          trailing ??
+          (onTap != null
+              ? const Icon(Icons.chevron_right, color: Colors.white)
+              : null),
+      onTap: onTap,
+    );
+  }
+
   void _showCountryPicker(BuildContext context, WidgetRef ref) {
     const countries = {
-      null: 'Automatique (géolocalisation)',
+      null: AppStrings.automaticGeolocation,
       'us': 'États-Unis',
       'fr': 'France',
       'gb': 'Royaume-Uni',
@@ -247,7 +291,9 @@ class ProfileScreen extends ConsumerWidget {
               title: Text(entry.value),
               selected: entry.key == currentCountry,
               onTap: () {
-                ref.read(selectedCountryProvider.notifier).setCountry(entry.key);
+                ref
+                    .read(selectedCountryProvider.notifier)
+                    .setCountry(entry.key);
                 Navigator.of(context).pop();
               },
             );
@@ -286,7 +332,9 @@ class ProfileScreen extends ConsumerWidget {
               title: Text(entry.value),
               selected: entry.key == currentLanguage,
               onTap: () {
-                ref.read(selectedLanguageProvider.notifier).setLanguage(entry.key);
+                ref
+                    .read(selectedLanguageProvider.notifier)
+                    .setLanguage(entry.key);
                 Navigator.of(context).pop();
               },
             );

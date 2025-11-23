@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'home_screen.dart';
-import 'categories_screen.dart';
-import 'search_screen.dart';
+import 'explore_screen.dart';
 import 'favorites_screen.dart';
 import 'profile_screen.dart';
 import 'article_detail_screen.dart';
@@ -25,8 +24,7 @@ class _MainNavigationState extends State<MainNavigation> {
 
   static const List<Widget> _screens = [
     HomeScreen(),
-    CategoriesScreen(),
-    SearchScreen(),
+    ExploreScreen(),
     FavoritesScreen(),
     ProfileScreen(),
   ];
@@ -50,8 +48,8 @@ class _MainNavigationState extends State<MainNavigation> {
               // Main content
               selectedArticle != null
                   ? (isWebViewMode
-                      ? ArticleWebViewScreen(article: selectedArticle)
-                      : ArticleDetailScreen(article: selectedArticle))
+                        ? ArticleWebViewScreen(article: selectedArticle)
+                        : ArticleDetailScreen(article: selectedArticle))
                   : _screens[_selectedIndex],
               // Overlay for bottom navigation (only show when article is selected)
               if (selectedArticle != null)
@@ -75,8 +73,10 @@ class _MainNavigationState extends State<MainNavigation> {
                         selectedIndex: _selectedIndex,
                         onItemTapped: (index) {
                           // Clear selected article when navigating to other tabs
-                          ref.read(selectedArticleProvider.notifier).state = null;
-                          ref.read(isWebViewModeProvider.notifier).state = false;
+                          ref.read(selectedArticleProvider.notifier).state =
+                              null;
+                          ref.read(isWebViewModeProvider.notifier).state =
+                              false;
                           _onItemTapped(index);
                         },
                       ),
