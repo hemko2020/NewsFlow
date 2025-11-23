@@ -32,8 +32,9 @@ class ProfileScreen extends ConsumerWidget {
     }
 
     String getLanguageName(String? code) {
-      if (code == null)
+      if (code == null) {
         return '${AppStrings.automatic} (${getLanguageName(deviceLanguage)})';
+      }
       const languageNames = {
         'ar': 'العربية',
         'en': 'English',
@@ -135,7 +136,7 @@ class ProfileScreen extends ConsumerWidget {
               onChanged: (value) {
                 // TODO: toggle notifications
               },
-              activeColor: Colors.red,
+              activeThumbColor: const Color(0xFFD32F2F),
             ),
           ),
 
@@ -150,7 +151,7 @@ class ProfileScreen extends ConsumerWidget {
               onChanged: (value) {
                 // TODO: toggle dark mode
               },
-              activeColor: Colors.red,
+              activeThumbColor: const Color(0xFFD32F2F),
             ),
           ),
 

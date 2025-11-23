@@ -102,15 +102,15 @@ class _SwipeableArticleFeedState extends State<SwipeableArticleFeed> {
             filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(30),
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withValues(alpha: 0.3),
                     blurRadius: 30,
                     offset: const Offset(0, 20),
                   ),
@@ -192,7 +192,7 @@ class _SwipeableArticleFeedState extends State<SwipeableArticleFeed> {
                             Text(
                               _formatDate(article.publishedAt),
                               style: TextStyle(
-                                color: Colors.white.withOpacity(0.7),
+                                color: Colors.white.withValues(alpha: 0.7),
                                 fontWeight: FontWeight.bold,
                                 fontSize: 14,
                               ),
@@ -204,7 +204,7 @@ class _SwipeableArticleFeedState extends State<SwipeableArticleFeed> {
                               child: Text(
                                 '|',
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.4),
+                                  color: Colors.white.withValues(alpha: 0.4),
                                 ),
                               ),
                             ),
@@ -212,7 +212,7 @@ class _SwipeableArticleFeedState extends State<SwipeableArticleFeed> {
                               child: Text(
                                 article.source,
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.7),
+                                  color: Colors.white.withValues(alpha: 0.7),
                                   fontWeight: FontWeight.bold,
                                   fontSize: 14,
                                 ),
@@ -227,7 +227,7 @@ class _SwipeableArticleFeedState extends State<SwipeableArticleFeed> {
                           Text(
                             article.description,
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.7),
+                              color: Colors.white.withValues(alpha: 0.7),
                               fontSize: 14,
                               height: 1.5,
                             ),
