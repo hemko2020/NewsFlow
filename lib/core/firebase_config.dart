@@ -1,34 +1,26 @@
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class FirebaseConfig {
   static const String appName = 'newsflow-6b8c1';
 
   static FirebaseOptions get options {
-    String getEnv(String key, {String fallback = ''}) {
-      try {
-        final value = dotenv.get(key, fallback: fallback);
-        return value.isNotEmpty ? value : fallback;
-      } catch (e) {
-        return fallback;
-      }
-    }
-
-    return FirebaseOptions(
-      apiKey: getEnv('FIREBASE_API_KEY', fallback: 'demo_api_key'),
-      appId: getEnv('FIREBASE_APP_ID', fallback: '1:demo:android:demo'),
-      messagingSenderId: getEnv('FIREBASE_MESSAGING_SENDER_ID', fallback: '123456789'),
-      projectId: getEnv('FIREBASE_PROJECT_ID', fallback: 'demo-project'),
-      storageBucket: getEnv('FIREBASE_STORAGE_BUCKET', fallback: 'demo-project.appspot.com'),
+    // Using hardcoded values from .env file
+    // In production, these would be injected via CI/CD or Envied
+    return const FirebaseOptions(
+      apiKey: 'dAIzaSyB1p8sNPW1eCm9vuWw2SjEzv0zi5dGdCRc',
+      appId: '1:780714228095:android:67e8ef11b862659987c24a',
+      messagingSenderId: '780714228095',
+      projectId: 'newsflow-6b8c1',
+      storageBucket: 'newsflow-6b8c1.firebasestorage.app',
     );
   }
 
   static bool isValid() {
     try {
       final opts = options;
-      return opts.apiKey != 'demo_api_key' &&
-             opts.appId != '1:demo:android:demo' &&
-             opts.projectId != 'demo-project';
+      return opts.apiKey.isNotEmpty &&
+          opts.appId.isNotEmpty &&
+          opts.projectId.isNotEmpty;
     } catch (e) {
       return false;
     }

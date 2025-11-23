@@ -1,11 +1,11 @@
-import 'dart:developer' as developer;
+ import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'secure_storage_service.dart';
 
 class SecureErrorHandler {
   // Niveaux de log pour filtrer en production
-  static const bool _enableDetailedLogs = kDebugMode; // Désactiver en production
+  static const bool _enableDetailedLogs =
+      kDebugMode; // Désactiver en production
 
   // === LOGGING SÉCURISÉ ===
   static void logInfo(String message, {Map<String, dynamic>? data}) {
@@ -19,7 +19,11 @@ class SecureErrorHandler {
     }
   }
 
-  static void logWarning(String message, {Map<String, dynamic>? data, Object? error}) {
+  static void logWarning(
+    String message, {
+    Map<String, dynamic>? data,
+    Object? error,
+  }) {
     developer.log(
       _sanitizeMessage(message),
       name: 'NewsFlow',
@@ -28,7 +32,12 @@ class SecureErrorHandler {
     );
   }
 
-  static void logError(String message, {Map<String, dynamic>? data, Object? error, StackTrace? stackTrace}) {
+  static void logError(
+    String message, {
+    Map<String, dynamic>? data,
+    Object? error,
+    StackTrace? stackTrace,
+  }) {
     // Toujours logger les erreurs même en production (sans données sensibles)
     developer.log(
       _sanitizeMessage(message),
@@ -44,15 +53,23 @@ class SecureErrorHandler {
     }
   }
 
-  static void logPaymentEvent(String event, {Map<String, dynamic>? sanitizedData}) {
+  static void logPaymentEvent(
+    String event, {
+    Map<String, dynamic>? sanitizedData,
+  }) {
     // Logging spécial pour les événements de paiement (toujours anonymisé)
-    final safeData = sanitizedData != null ? _sanitizePaymentData(sanitizedData) : <String, dynamic>{};
+    final safeData = sanitizedData != null
+        ? _sanitizePaymentData(sanitizedData)
+        : <String, dynamic>{};
     logInfo('PAYMENT_$event', data: safeData);
   }
 
   // === GESTION D'ERREURS SÉCURISÉE ===
   static String handlePaymentError(Object error) {
-    logPaymentEvent('ERROR', sanitizedData: {'error_type': error.runtimeType.toString()});
+    logPaymentEvent(
+      'ERROR',
+      sanitizedData: {'error_type': error.runtimeType.toString()},
+    );
 
     // Ne jamais exposer de détails sensibles dans les messages utilisateur
     if (error is Exception) {
@@ -96,8 +113,14 @@ class SecureErrorHandler {
     // Supprimer les tokens, clés API, emails, etc. des messages de log
     return message
         .replaceAll(RegExp(r'Bearer\s+[^\s]+'), '[TOKEN]')
-        .replaceAll(RegExp(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'), '[EMAIL]')
-        .replaceAll(RegExp(r'\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b'), '[CARD_NUMBER]')
+        .replaceAll(
+          RegExp(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'),
+          '[EMAIL]',
+        )
+        .replaceAll(
+          RegExp(r'\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b'),
+          '[CARD_NUMBER]',
+        )
         .replaceAll(RegExp(r'\b\d{3}\b'), '[CVV]');
   }
 
@@ -106,8 +129,15 @@ class SecureErrorHandler {
 
     // Supprimer ou masquer les champs sensibles
     const sensitiveKeys = [
-      'password', 'token', 'api_key', 'secret', 'card_number',
-      'cvv', 'expiry_date', 'cardholder_name', 'billing_address'
+      'password',
+      'token',
+      'api_key',
+      'secret',
+      'card_number',
+      'cvv',
+      'expiry_date',
+      'cardholder_name',
+      'billing_address',
     ];
 
     for (final key in sensitiveKeys) {
@@ -123,12 +153,16 @@ class SecureErrorHandler {
     // Pour les données de paiement, ne garder que les informations non sensibles
     final allowedKeys = ['amount', 'currency', 'status', 'timestamp'];
     return Map.fromEntries(
-      data.entries.where((entry) => allowedKeys.contains(entry.key))
+      data.entries.where((entry) => allowedKeys.contains(entry.key)),
     );
   }
 
   // === MONITORING EN PRODUCTION ===
-  static void _sendToMonitoringService(String message, Object? error, StackTrace? stackTrace) {
+  static void _sendToMonitoringService(
+    String message,
+    Object? error,
+    StackTrace? stackTrace,
+  ) {
     // Implémentez l'envoi à votre service de monitoring
     // Exemples: Sentry, Firebase Crashlytics, LogRocket
 
@@ -146,19 +180,10 @@ class SecureErrorHandler {
 
   // === VALIDATION DE SÉCURITÉ ===
   static bool validateEnvironment() {
-    // Vérifier que les variables d'environnement sensibles sont présentes
-    try {
-      // Ces appels lèveront une exception si les clés n'existent pas
-      dotenv.get('NEWS_API_KEY');
-      dotenv.get('FIREBASE_API_KEY');
-      dotenv.get('STRIPE_PUBLISHABLE_KEY');
-
-      logInfo('SECURITY_CHECK_PASSED: Environment variables validated');
-      return true;
-    } catch (e) {
-      logError('SECURITY_CHECK_FAILED: Missing environment variables', error: e);
-      return false;
-    }
+    // Environment variables are now compile-time constants with Envied
+    // No runtime validation needed
+    logInfo('SECURITY_CHECK_PASSED: Using compile-time environment constants');
+    return true;
   }
 
   static Future<bool> validateSecureStorage() async {

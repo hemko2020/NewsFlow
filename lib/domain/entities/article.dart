@@ -11,6 +11,7 @@ class Article {
   final Category category;
   final String? summary; // AI generated
   final String? sentiment; // positive, negative, neutral
+  final String? content;
 
   Article({
     required this.id,
@@ -23,6 +24,7 @@ class Article {
     required this.category,
     this.summary,
     this.sentiment,
+    this.content,
   });
 
   Article copyWith({
@@ -36,6 +38,7 @@ class Article {
     Category? category,
     String? summary,
     String? sentiment,
+    String? content,
   }) {
     return Article(
       id: id ?? this.id,
@@ -48,6 +51,7 @@ class Article {
       category: category ?? this.category,
       summary: summary ?? this.summary,
       sentiment: sentiment ?? this.sentiment,
+      content: content ?? this.content,
     );
   }
 }

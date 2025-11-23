@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:newsflow/data/models/article_model.dart';
 import 'package:newsflow/domain/entities/category.dart';
+import 'package:newsflow/env/env.dart';
+import 'package:http/http.dart' as http;
+import 'package:html/parser.dart' as parser;
 
 abstract class ArticleRemoteDataSource {
   Future<List<ArticleModel>> getArticlesByCategory(
@@ -20,20 +22,7 @@ class ArticleRemoteDataSourceImpl implements ArticleRemoteDataSource {
   final Map<String, List<String>> _sourcesCache = {};
 
   ArticleRemoteDataSourceImpl(this.dio) {
-    try {
-      // Essayer d'abord les variables d'environnement système (pour CI/production)
-      apiKey = dotenv.get('NEWS_API_KEY', fallback: '');
-
-      // Si pas trouvé dans .env, essayer les variables système
-      if (apiKey.isEmpty) {
-        apiKey = const String.fromEnvironment('NEWS_API_KEY', defaultValue: '');
-      }
-
-      if (apiKey.isEmpty) throw Exception('API key is empty');
-    } catch (e) {
-      // News API key not found, articles will not load
-      apiKey = '';
-    }
+    apiKey = Env.newsApiKey;
   }
 
   @override
@@ -75,10 +64,28 @@ class ArticleRemoteDataSourceImpl implements ArticleRemoteDataSource {
               final data = response.data;
               final articles = data['articles'] as List;
               if (articles.isNotEmpty) {
-                return articles.map((json) {
+                // Fetch full content in parallel
+                final articleFutures = articles.map((json) async {
                   final model = ArticleModel.fromNewsApiJson(json);
-                  return model.copyWith(category: category);
-                }).toList();
+                  String? fullContent = model.content;
+
+                  // If content is missing or truncated (NewsAPI usually truncates), try to scrape
+                  if (fullContent == null ||
+                      fullContent.contains('[+') ||
+                      fullContent.length < 200) {
+                    final scrapedContent = await _fetchFullContent(model.url);
+                    if (scrapedContent != null) {
+                      fullContent = scrapedContent;
+                    }
+                  }
+
+                  return model.copyWith(
+                    category: category,
+                    content: fullContent,
+                  );
+                });
+
+                return await Future.wait(articleFutures);
               }
             }
           } catch (e) {
@@ -87,7 +94,52 @@ class ArticleRemoteDataSourceImpl implements ArticleRemoteDataSource {
         }
       }
 
-      // Fallback: Use everything with category query
+      // Fallback 1: Try top-headlines with category and country (no sources)
+      if (newsApiCategory != null) {
+        String url =
+            'https://newsapi.org/v2/top-headlines?category=$newsApiCategory&apiKey=$apiKey&page=$page';
+
+        if (country != null) {
+          url += '&country=$country';
+        } else if (language != null) {
+          // Note: top-headlines with category supports country OR language (undocumented but often works)
+          // or just defaults to US/English if neither.
+          // Safest is to use language if country is missing.
+          url += '&language=$language';
+        }
+
+        try {
+          final response = await dio.get(url);
+          if (response.statusCode == 200) {
+            final data = response.data;
+            final articles = data['articles'] as List;
+            if (articles.isNotEmpty) {
+              // Fetch full content in parallel
+              final articleFutures = articles.map((json) async {
+                final model = ArticleModel.fromNewsApiJson(json);
+                String? fullContent = model.content;
+
+                if (fullContent == null ||
+                    fullContent.contains('[+') ||
+                    fullContent.length < 200) {
+                  final scrapedContent = await _fetchFullContent(model.url);
+                  if (scrapedContent != null) {
+                    fullContent = scrapedContent;
+                  }
+                }
+
+                return model.copyWith(category: category, content: fullContent);
+              });
+
+              return await Future.wait(articleFutures);
+            }
+          }
+        } catch (e) {
+          // Error in top-headlines fallback
+        }
+      }
+
+      // Fallback 2: Use everything with category query
       return _fetchArticlesFromEverythingApi(
         searchQuery,
         page,
@@ -141,7 +193,7 @@ class ArticleRemoteDataSourceImpl implements ArticleRemoteDataSource {
   String _mapCategoryToQuery(Category category) {
     switch (category) {
       case Category.general:
-        return '';
+        return 'news'; // Changed from empty string to 'news'
       case Category.finance:
         return 'finance';
       case Category.health:
@@ -183,10 +235,25 @@ class ArticleRemoteDataSourceImpl implements ArticleRemoteDataSource {
         if (data.containsKey('articles')) {
           final articles = data['articles'] as List;
           if (articles.isNotEmpty) {
-            return articles.map((json) {
+            // Fetch full content in parallel
+            final articleFutures = articles.map((json) async {
               final model = ArticleModel.fromNewsApiJson(json);
-              return model.copyWith(category: category);
-            }).toList();
+              String? fullContent = model.content;
+
+              // If content is missing or truncated, try to scrape
+              if (fullContent == null ||
+                  fullContent.contains('[+') ||
+                  fullContent.length < 200) {
+                final scrapedContent = await _fetchFullContent(model.url);
+                if (scrapedContent != null) {
+                  fullContent = scrapedContent;
+                }
+              }
+
+              return model.copyWith(category: category, content: fullContent);
+            });
+
+            return await Future.wait(articleFutures);
           }
         }
       }
@@ -214,5 +281,34 @@ class ArticleRemoteDataSourceImpl implements ArticleRemoteDataSource {
       case Category.sciences:
         return 'science';
     }
+  }
+
+  Future<String?> _fetchFullContent(String url) async {
+    try {
+      final uri = Uri.parse(url);
+      final response = await http.get(uri).timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final document = parser.parse(response.body);
+        final paragraphs = document.querySelectorAll('p');
+
+        final buffer = StringBuffer();
+        for (var p in paragraphs) {
+          final text = p.text.trim();
+          if (text.length > 50) {
+            // Filter out short snippets like "Read more", "Advertisement"
+            buffer.writeln(text);
+            buffer.writeln(); // Add spacing
+          }
+        }
+
+        final result = buffer.toString();
+        return result.isNotEmpty ? result : null;
+      }
+    } catch (e) {
+      // Ignore scraping errors
+      return null;
+    }
+    return null;
   }
 }
