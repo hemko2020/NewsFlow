@@ -26,9 +26,7 @@ jobs:
           path: |
             ~/.pub-cache
             ${{ runner.tool_cache }}/flutter
-          key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-flutter-
+          key: ${{ runner.os }}-flutter-${{ hashFiles('pubspec.yaml') }}
 
       - name: Install dependencies
         run: flutter pub get
@@ -106,7 +104,7 @@ jobs:
           path: |
             ~/.pub-cache
             ${{ runner.tool_cache }}/flutter
-          key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.lock') }}
+          key: ${{ runner.os }}-flutter-${{ hashFiles('pubspec.yaml') }}
 
       - name: Install dependencies
         run: flutter pub get
