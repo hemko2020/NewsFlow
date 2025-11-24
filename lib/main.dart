@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'core/firebase_config.dart';
 import 'core/app.dart';
@@ -12,14 +11,7 @@ bool isFirebaseAvailable = false;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables FIRST
-  try {
-    await dotenv.load();
-  } catch (e) {
-    // Could not load .env file
-  }
-
-  // Setup service locator AFTER dotenv is loaded
+  // Setup service locator
   setupServiceLocator();
 
   try {
